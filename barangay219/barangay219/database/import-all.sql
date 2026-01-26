@@ -6,8 +6,8 @@
 -- ============================================
 -- STEP 1: Create Database
 -- ============================================
-CREATE DATABASE IF NOT EXISTS `barangay219_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `barangay219_db`;
+CREATE DATABASE IF NOT EXISTS barangay219_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE barangay219_db;
 
 -- ============================================
 -- STEP 2: Drop Existing Tables (if any)
