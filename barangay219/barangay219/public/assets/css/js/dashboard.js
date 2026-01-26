@@ -3,7 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadStatistics() {
-    const apiUrl = window.API_URL || 'http://localhost/e-barangay-system/e-barangay-system/api/';
+    const apiUrl = window.API_URL;
+    if (!apiUrl) {
+        console.error('API_URL is not defined. Please check your configuration.');
+        return;
+    }
     
     fetch(apiUrl + 'reports.php?action=statistics')
         .then(r => r.json())
