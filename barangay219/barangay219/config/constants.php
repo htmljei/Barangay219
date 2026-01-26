@@ -22,8 +22,8 @@ define('APP_VERSION', '1.0.0');
 define('BARANGAY_NAME', 'Barangay 195, Tondo, Manila');
 
 // Base URLs
-define('BASE_URL', 'http://localhost/e-barangay-system/e-barangay-system/public/');
-define('API_URL', 'http://localhost/e-barangay-system/e-barangay-system/api/');
+define('BASE_URL', 'http://localhost/Barangay219/barangay219/barangay219/public/');
+define('API_URL', 'http://localhost/Barangay219/barangay219/barangay219/api/');
 define('ASSETS_URL', BASE_URL . 'assets/');
 
 // File Paths
