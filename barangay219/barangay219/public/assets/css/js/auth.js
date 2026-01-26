@@ -12,7 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('action', 'login');
         
         // Get API URL from global variable (defined in HTML)
-        const apiUrl = window.API_URL || 'http://localhost/e-barangay-system/e-barangay-system/api/';
+        const apiUrl = window.API_URL;
+        if (!apiUrl) {
+            console.error('API_URL is not defined. Please check your configuration.');
+            showAlert('danger', 'Configuration error. Please refresh the page.');
+            return;
+        }
         
         // Debug logging
         console.log('API URL:', apiUrl);
