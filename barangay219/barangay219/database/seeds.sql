@@ -9,7 +9,7 @@ INSERT INTO users (username, password, email, role, status) VALUES
 ON DUPLICATE KEY UPDATE password = VALUES(password);
 
 -- Note: The password hash above is a properly generated bcrypt hash for 'admin123'
--- If you need to regenerate it, access: http://localhost/e-barangay-system/e-barangay-system/fix-password.php
+-- If you need to regenerate it, access: http://localhost/Barangay219/barangay219/barangay219/fix-password.php
 
 -- Sample residents (optional - for testing)
 INSERT INTO residents (first_name, middle_name, last_name, birth_date, gender, civil_status, address, citizenship, status) VALUES
