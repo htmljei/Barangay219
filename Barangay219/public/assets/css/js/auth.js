@@ -29,21 +29,69 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Show loading state
+        const submitButton = loginForm.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Logging in...';
+        
         fetch(apiUrl + 'auth.php', {
             method: 'POST',
             body: formData
         })
-        .then(r => r.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
+            // Check if response is OK
+            if (!response.ok) {
+                throw new Error('HTTP error! status: ' + response.status);
+            }
+            
+            // Check content type
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Server returned non-JSON response. Check API URL and server configuration.');
+                });
+            }
+            
+            return response.json();
+        })
         .then(d => {
+            console.log('Response data:', d);
             if (d.success) {
-                window.location.href = d.data.redirect;
+                showAlert('success', 'Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = d.data.redirect;
+                }, 500);
             } else {
-                showAlert('danger', d.message);
+                showAlert('danger', d.message || 'Login failed. Please check your credentials.');
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
             }
         })
         .catch(e => {
             console.error('Login error:', e);
-            showAlert('danger', 'Login error. Please try again.');
+            let errorMessage = 'Login error occurred. ';
+            
+            if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+                errorMessage += 'Cannot connect to server. Please check:';
+                errorMessage += '<ul style="margin: 10px 0; padding-left: 20px;">';
+                errorMessage += '<li>Is Apache running in XAMPP?</li>';
+                errorMessage += '<li>Is the API URL correct? (' + apiUrl + 'auth.php)</li>';
+                errorMessage += '<li>Check browser console (F12) for more details</li>';
+                errorMessage += '</ul>';
+            } else if (e.message.includes('HTTP error')) {
+                errorMessage += 'Server error: ' + e.message;
+            } else {
+                errorMessage += e.message || 'Please try again.';
+            }
+            
+            showAlert('danger', errorMessage);
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
         });
     });
 });
