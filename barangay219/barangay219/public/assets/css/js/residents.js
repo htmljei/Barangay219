@@ -27,7 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function loadResidents(page = 1) {
     currentPage = page;
-    const apiUrl = window.API_URL || 'http://localhost/e-barangay-system/e-barangay-system/api/';
+    const apiUrl = window.API_URL;
+    if (!apiUrl) {
+        console.error('API_URL is not defined. Please check your configuration.');
+        showAlert('error', 'Configuration error. Please refresh the page.');
+        return;
+    }
     const itemsPerPage = window.ITEMS_PER_PAGE || 20;
     fetch(`${apiUrl}resident.php?action=list&page=${page}&limit=${itemsPerPage}`)
         .then(response => response.json())
@@ -134,7 +139,12 @@ function searchResidents() {
         return;
     }
     
-    const apiUrl = window.API_URL || 'http://localhost/e-barangay-system/e-barangay-system/api/';
+    const apiUrl = window.API_URL;
+    if (!apiUrl) {
+        console.error('API_URL is not defined. Please check your configuration.');
+        showAlert('error', 'Configuration error. Please refresh the page.');
+        return;
+    }
     fetch(`${apiUrl}resident.php?action=search&q=${encodeURIComponent(query)}`)
         .then(response => response.json())
         .then(data => {
@@ -155,7 +165,12 @@ function searchResidents() {
  * Edit resident
  */
 function editResident(id) {
-    const apiUrl = window.API_URL || 'http://localhost/e-barangay-system/e-barangay-system/api/';
+    const apiUrl = window.API_URL;
+    if (!apiUrl) {
+        console.error('API_URL is not defined. Please check your configuration.');
+        showAlert('error', 'Configuration error. Please refresh the page.');
+        return;
+    }
     fetch(`${apiUrl}resident.php?action=get&id=${id}`)
         .then(response => response.json())
         .then(data => {
@@ -194,7 +209,12 @@ function editResident(id) {
  */
 function viewResident(id) {
     // Redirect to profile page or show in modal
-    const baseUrl = window.BASE_URL || 'http://localhost/e-barangay-system/e-barangay-system/public/';
+    const baseUrl = window.BASE_URL;
+    if (!baseUrl) {
+        console.error('BASE_URL is not defined. Please check your configuration.');
+        showAlert('error', 'Configuration error. Please refresh the page.');
+        return;
+    }
     window.location.href = `${baseUrl}profile.php?resident_id=${id}`;
 }
 
@@ -211,7 +231,12 @@ function saveResident() {
         formData.append('id', residentId);
     }
     
-    const apiUrl = window.API_URL || 'http://localhost/e-barangay-system/e-barangay-system/api/';
+    const apiUrl = window.API_URL;
+    if (!apiUrl) {
+        console.error('API_URL is not defined. Please check your configuration.');
+        showAlert('error', 'Configuration error. Please refresh the page.');
+        return;
+    }
     fetch(`${apiUrl}resident.php`, {
         method: 'POST',
         body: formData
@@ -242,7 +267,12 @@ function deleteResident(id) {
         formData.append('action', 'delete');
         formData.append('id', id);
         
-        const apiUrl = window.API_URL || 'http://localhost/e-barangay-system/e-barangay-system/api/';
+        const apiUrl = window.API_URL;
+        if (!apiUrl) {
+            console.error('API_URL is not defined. Please check your configuration.');
+            showAlert('error', 'Configuration error. Please refresh the page.');
+            return;
+        }
         fetch(`${apiUrl}resident.php`, {
             method: 'POST',
             body: formData
