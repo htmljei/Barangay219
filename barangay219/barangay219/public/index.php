@@ -60,7 +60,7 @@ if (isLoggedIn()) {
         <?php
         // Ensure API_URL is defined
         if (!defined('API_URL')) {
-            define('API_URL', 'http://localhost/e-barangay-system/e-barangay-system/api/');
+            require_once __DIR__ . '/../config/constants.php';
         }
         ?>
         window.API_URL = '<?php echo addslashes(API_URL); ?>';
@@ -68,7 +68,7 @@ if (isLoggedIn()) {
         
         // Fallback if API_URL is not set correctly (check for PHP code that wasn't executed)
         if (!window.API_URL || window.API_URL.indexOf('&lt;?php') !== -1 || window.API_URL.indexOf('%3C') !== -1 || window.API_URL.trim() === '') {
-            window.API_URL = 'http://localhost/e-barangay-system/e-barangay-system/api/';
+            window.API_URL = '<?php echo addslashes(API_URL); ?>';
             console.warn('Using fallback API URL:', window.API_URL);
         }
     </script>
