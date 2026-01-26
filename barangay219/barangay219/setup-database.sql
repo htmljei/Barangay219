@@ -3,8 +3,8 @@
 -- Run this after creating the database and running schema.sql
 
 -- First, create the database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS barangay219_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE barangay219_db;
+CREATE DATABASE IF NOT EXISTS `barangay219_db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `barangay219_db`;
 
 -- Update admin password with a proper hash
 -- Password: admin123
