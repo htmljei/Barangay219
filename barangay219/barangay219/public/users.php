@@ -104,7 +104,6 @@ include __DIR__ . '/../includes/sidebar.php';
                             <label for="resident_id" class="form-label">Resident ID (Optional)</label>
                             <input type="number" class="form-control" id="resident_id" name="resident_id">
                         </div>
-                        
                         <div class="col-md-6 mb-3">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
@@ -112,6 +111,15 @@ include __DIR__ . '/../includes/sidebar.php';
                                 <option value="inactive">Inactive</option>
                                 <option value="suspended">Suspended</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="row" id="canApproveRow" style="display:none;">
+                        <div class="col-12 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="can_approve_registration" name="can_approve_registration" value="1">
+                                <label class="form-check-label" for="can_approve_registration">Can approve resident registration</label>
+                            </div>
+                            <small class="text-muted">(Barangay Captain assigns this right to Secretary.)</small>
                         </div>
                     </div>
                 </div>
