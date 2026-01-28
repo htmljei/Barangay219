@@ -47,13 +47,21 @@ function createBlotter() {
     $incident_location = sanitizeInput($_POST['incident_location'] ?? '');
     $description = sanitizeInput($_POST['description'] ?? '');
     if (!$case_title || !$complainant_name || !$description) { sendResponse(false, 'Required fields missing', null, 400); return; }
+    $hearing_date = !empty($_POST['hearing_date']) ? $_POST['hearing_date'] : null;
+    $hearing_notes = sanitizeInput($_POST['hearing_notes'] ?? '');
     try {
         $db = Database::getInstance();
-        $db->query("INSERT INTO blotters (case_title, complainant_name, respondent_name, incident_date, incident_location, description, handled_by) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-                   [$case_title, $complainant_name, $respondent_name, $incident_date, $incident_location, $description, getCurrentUserId()]);
+        $db->query("INSERT INTO blotters (case_title, complainant_name, respondent_name, incident_date, incident_location, description, handled_by, hearing_date, hearing_notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                   [$case_title, $complainant_name, $respondent_name, $incident_date, $incident_location, $description, getCurrentUserId(), $hearing_date ?: null, $hearing_notes ?: null]);
         sendResponse(true, 'Created', ['id' => $db->lastInsertId()]);
     } catch (Exception $e) {
-        sendResponse(false, 'Error', null, 500);
+        if (strpos($e->getMessage(), 'hearing_date') !== false || strpos($e->getMessage(), 'hearing_notes') !== false) {
+            $db->query("INSERT INTO blotters (case_title, complainant_name, respondent_name, incident_date, incident_location, description, handled_by) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+                       [$case_title, $complainant_name, $respondent_name, $incident_date, $incident_location, $description, getCurrentUserId()]);
+            sendResponse(true, 'Created', ['id' => $db->lastInsertId()]);
+        } else {
+            sendResponse(false, 'Error', null, 500);
+        }
     }
 }
 
@@ -63,10 +71,10 @@ function updateBlotter() {
     if (!$id) { sendResponse(false, 'ID required', null, 400); return; }
     $updates = [];
     $params = [];
-    foreach (['case_title', 'complainant_name', 'respondent_name', 'incident_date', 'incident_location', 'description', 'status', 'settlement_date'] as $field) {
+    foreach (['case_title', 'complainant_name', 'respondent_name', 'incident_date', 'incident_location', 'description', 'status', 'settlement_date', 'hearing_date', 'hearing_notes'] as $field) {
         if (isset($_POST[$field])) {
             $updates[] = "$field = ?";
-            $params[] = $field === 'incident_date' || $field === 'settlement_date' ? $_POST[$field] : sanitizeInput($_POST[$field]);
+            $params[] = in_array($field, ['incident_date', 'settlement_date', 'hearing_date']) ? $_POST[$field] : sanitizeInput($_POST[$field]);
         }
     }
     if (empty($updates)) { sendResponse(false, 'Nothing to update', null, 400); return; }
