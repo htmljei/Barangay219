@@ -56,13 +56,26 @@ function listUsers() {
     try {
         $db = Database::getInstance();
         
-        $sql = "SELECT u.id, u.username, u.email, u.role, u.status, u.created_at,
+        $sql = "SELECT u.id, u.username, u.email, u.role, u.status, u.created_at, u.can_approve_registration,
                        r.first_name, r.last_name, r.middle_name
                 FROM users u
                 LEFT JOIN residents r ON u.resident_id = r.id
                 ORDER BY u.created_at DESC";
-        
-        $users = $db->fetchAll($sql);
+        try {
+            $users = $db->fetchAll($sql);
+        } catch (Exception $e) {
+            if (strpos($e->getMessage(), 'can_approve_registration') !== false) {
+                $sql = "SELECT u.id, u.username, u.email, u.role, u.status, u.created_at,
+                               r.first_name, r.last_name, r.middle_name
+                        FROM users u
+                        LEFT JOIN residents r ON u.resident_id = r.id
+                        ORDER BY u.created_at DESC";
+                $users = $db->fetchAll($sql);
+                foreach ($users as &$u) { $u['can_approve_registration'] = 0; }
+            } else {
+                throw $e;
+            }
+        }
         
         // Remove sensitive data
         foreach ($users as &$user) {
@@ -92,13 +105,26 @@ function getUser() {
     try {
         $db = Database::getInstance();
         
-        $sql = "SELECT u.id, u.username, u.email, u.role, u.status, u.resident_id, u.created_at,
+        $sql = "SELECT u.id, u.username, u.email, u.role, u.status, u.resident_id, u.created_at, u.can_approve_registration,
                        r.first_name, r.last_name, r.middle_name
                 FROM users u
                 LEFT JOIN residents r ON u.resident_id = r.id
                 WHERE u.id = ?";
-        
-        $user = $db->fetchOne($sql, [$id]);
+        try {
+            $user = $db->fetchOne($sql, [$id]);
+        } catch (Exception $e) {
+            if (strpos($e->getMessage(), 'can_approve_registration') !== false) {
+                $sql = "SELECT u.id, u.username, u.email, u.role, u.status, u.resident_id, u.created_at,
+                               r.first_name, r.last_name, r.middle_name
+                        FROM users u
+                        LEFT JOIN residents r ON u.resident_id = r.id
+                        WHERE u.id = ?";
+                $user = $db->fetchOne($sql, [$id]);
+                if ($user) $user['can_approve_registration'] = 0;
+            } else {
+                throw $e;
+            }
+        }
         
         if (!$user) {
             sendResponse(false, 'User not found', null, 404);
@@ -130,6 +156,7 @@ function createUser() {
     $email = sanitizeInput($_POST['email'] ?? '');
     $role = sanitizeInput($_POST['role'] ?? '');
     $resident_id = intval($_POST['resident_id'] ?? 0);
+    $can_approve_registration = (isset($_POST['can_approve_registration']) && $_POST['can_approve_registration']) ? 1 : 0;
     
     // Validation
     if (empty($username) || empty($password) || empty($role)) {
@@ -163,19 +190,21 @@ function createUser() {
         // Hash password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         
-        // Insert user
-        $sql = "INSERT INTO users (username, password, email, role, resident_id, status) 
-                VALUES (?, ?, ?, ?, ?, ?)";
-        
-        $params = [
-            $username,
-            $hashedPassword,
-            $email ?: null,
-            $role,
-            $resident_id ?: null,
-            USER_ACTIVE
-        ];
-        
+        // Insert user (can_approve_registration only for secretary; captain assigns it)
+        $cols = "username, password, email, role, resident_id, status";
+        $placeholders = "?, ?, ?, ?, ?, ?";
+        $params = [$username, $hashedPassword, $email ?: null, $role, $resident_id ?: null, USER_ACTIVE];
+        try {
+            $db->query("SELECT can_approve_registration FROM users LIMIT 1");
+            $cols .= ", can_approve_registration";
+            $placeholders .= ", ?";
+            if ($role === ROLE_SECRETARY) {
+                $params[] = $can_approve_registration;
+            } else {
+                $params[] = 0;
+            }
+        } catch (Exception $e) { /* column may not exist yet */ }
+        $sql = "INSERT INTO users ($cols) VALUES ($placeholders)";
         $db->query($sql, $params);
         $userId = $db->lastInsertId();
         
@@ -205,13 +234,13 @@ function updateUser() {
     $resident_id = intval($_POST['resident_id'] ?? 0);
     $status = sanitizeInput($_POST['status'] ?? '');
     $password = $_POST['password'] ?? '';
+    $can_approve_registration = (isset($_POST['can_approve_registration']) && $_POST['can_approve_registration']) ? 1 : 0;
     
     if (!$id) {
         sendResponse(false, 'User ID is required', null, 400);
         return;
     }
     
-    // Prevent updating own account status/role
     if ($id == getCurrentUserId()) {
         if ($status && $status !== USER_ACTIVE) {
             sendResponse(false, 'You cannot change your own account status', null, 403);
@@ -222,14 +251,12 @@ function updateUser() {
     try {
         $db = Database::getInstance();
         
-        // Check if user exists
-        $existing = $db->fetchOne("SELECT id FROM users WHERE id = ?", [$id]);
+        $existing = $db->fetchOne("SELECT id, role FROM users WHERE id = ?", [$id]);
         if (!$existing) {
             sendResponse(false, 'User not found', null, 404);
             return;
         }
         
-        // Build update query
         $updates = [];
         $params = [];
         
@@ -257,6 +284,14 @@ function updateUser() {
                 $updates[] = "status = ?";
                 $params[] = $status;
             }
+        }
+        
+        if ($existing['role'] === ROLE_SECRETARY) {
+            try {
+                $db->query("SELECT can_approve_registration FROM users LIMIT 1");
+                $updates[] = "can_approve_registration = ?";
+                $params[] = $can_approve_registration;
+            } catch (Exception $e) { /* column may not exist */ }
         }
         
         if (!empty($password)) {
