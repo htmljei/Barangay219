@@ -24,6 +24,23 @@ include __DIR__ . '/../includes/sidebar.php';
             </button>
         </div>
 
+        <?php if (canApproveRegistration()): ?>
+        <div class="card mb-4" id="pendingRegistrationsCard">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-hourglass-split"></i> Pending Registrations (resident self-registered; needs approval)</span>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="loadPendingRegistrations()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            </div>
+            <div class="card-body">
+                <div id="pendingRegistrationsList">
+                    <table class="table table-sm">
+                        <thead><tr><th>ID</th><th>Name</th><th>Address</th><th>Contact</th><th>Actions</th></tr></thead>
+                        <tbody id="pendingTableBody"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Search Bar -->
         <div class="search-bar">
             <div class="row">
@@ -163,13 +180,42 @@ include __DIR__ . '/../includes/sidebar.php';
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-9 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="address" name="address" rows="2" required></textarea>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="household_id" class="form-label">Household ID (Optional)</label>
-                            <input type="number" class="form-control" id="household_id" name="household_id">
+                        <div class="col-md-2 mb-3">
+                            <label for="household_id" class="form-label">Household ID</label>
+                            <input type="number" class="form-control" id="household_id" name="household_id" min="0">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="relationship_to_head" class="form-label">Relationship to head</label>
+                            <select class="form-select" id="relationship_to_head" name="relationship_to_head">
+                                <option value="">—</option><option value="self">Self</option><option value="spouse">Spouse</option><option value="child">Child</option><option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2"><button type="button" class="btn btn-link p-0" data-bs-toggle="collapse" data-bs-target="#extendedFields">+ Extended fields (residency, socio-economic, ID &amp; health)</button></div>
+                    <div class="collapse" id="extendedFields">
+                        <div class="row">
+                            <div class="col-md-3 mb-2"><label class="form-label">Place of birth</label><input type="text" class="form-control" id="place_of_birth" name="place_of_birth"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">Length of stay (yrs)</label><input type="number" class="form-control" id="length_of_stay_years" name="length_of_stay_years" min="0"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">Date of residency</label><input type="date" class="form-control" id="date_of_residency" name="date_of_residency"></div>
+                            <div class="col-md-3 mb-2"><label class="form-label">Email</label><input type="email" class="form-control" id="email" name="email"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2 mb-2"><label class="form-label">Monthly income</label><input type="number" class="form-control" id="monthly_income" name="monthly_income" step="0.01" min="0"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">Employment type</label><input type="text" class="form-control" id="employment_type" name="employment_type"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">PWD</label><br><input type="checkbox" id="is_pwd" name="is_pwd" value="1"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">Senior</label><br><input type="checkbox" id="is_senior" name="is_senior" value="1"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">SSS No.</label><input type="text" class="form-control" id="sss_number" name="sss_number"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">PhilHealth No.</label><input type="text" class="form-control" id="philhealth_number" name="philhealth_number"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2 mb-2"><label class="form-label">Blood type</label><select class="form-select" id="blood_type" name="blood_type"><option value="">—</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option></select></div>
+                            <div class="col-md-3 mb-2"><label class="form-label">Allergies</label><input type="text" class="form-control" id="allergies" name="allergies"></div>
+                            <div class="col-md-3 mb-2"><label class="form-label">Medical conditions</label><input type="text" class="form-control" id="medical_conditions" name="medical_conditions"></div>
+                            <div class="col-md-2 mb-2"><label class="form-label">Disability</label><input type="text" class="form-control" id="disability" name="disability"></div>
                         </div>
                     </div>
                 </div>
@@ -191,5 +237,6 @@ include __DIR__ . '/../includes/sidebar.php';
     }
     window.ITEMS_PER_PAGE = <?php echo ITEMS_PER_PAGE; ?>;
     window.BASE_URL = '<?php echo BASE_URL; ?>';
+    window.CAN_APPROVE_REGISTRATION = <?php echo canApproveRegistration() ? 'true' : 'false'; ?>;
 </script>
 <script src="<?php echo ASSETS_URL; ?>css/js/residents.js?v=<?php echo time(); ?>"></script>
