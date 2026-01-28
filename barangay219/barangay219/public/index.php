@@ -49,6 +49,9 @@ if (isLoggedIn()) {
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-box-arrow-in-right"></i> Login
                 </button>
+                <div class="mt-3 text-center">
+                    <a href="<?php echo BASE_URL; ?>register.php">Register as resident</a>
+                </div>
             </form>
         </div>
     </div>
