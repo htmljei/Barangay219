@@ -107,6 +107,40 @@ function requireAdmin() {
 }
 
 /**
+ * Check if user can approve resident registration (Captain or Secretary with assigned right)
+ */
+function canApproveRegistration() {
+    if (!isLoggedIn()) {
+        return false;
+    }
+    $role = getCurrentUserRole();
+    if ($role === ROLE_BARANGAY_CAPTAIN) {
+        return true;
+    }
+    if ($role === ROLE_SECRETARY) {
+        try {
+            $db = Database::getInstance();
+            $u = $db->fetchOne("SELECT can_approve_registration FROM users WHERE id = ?", [getCurrentUserId()]);
+            return !empty($u['can_approve_registration']);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+    return false;
+}
+
+/**
+ * Require permission to approve resident registration
+ */
+function requireCanApproveRegistration() {
+    requireLogin();
+    if (!canApproveRegistration()) {
+        header('Location: ' . BASE_URL . 'dashboard.php?error=access_denied');
+        exit();
+    }
+}
+
+/**
  * Check if user can access a module based on role permissions
  */
 function canAccessModule($module) {
