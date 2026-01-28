@@ -7,20 +7,78 @@ let currentPage = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadResidents();
+    if (window.CAN_APPROVE_REGISTRATION && document.getElementById('pendingTableBody')) {
+        loadPendingRegistrations();
+    }
     
-    // Form submission
     document.getElementById('residentForm').addEventListener('submit', function(e) {
         e.preventDefault();
         saveResident();
     });
     
-    // Search on Enter key
     document.getElementById('searchInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             searchResidents();
         }
     });
 });
+
+function loadPendingRegistrations() {
+    const apiUrl = window.API_URL;
+    if (!apiUrl) return;
+    const tbody = document.getElementById('pendingTableBody');
+    if (!tbody) return;
+    fetch(apiUrl + 'resident.php?action=list_pending')
+        .then(r => r.json())
+        .then(d => {
+            if (d.success && d.data && d.data.length) {
+                tbody.innerHTML = d.data.map(r => {
+                    const name = [r.first_name, r.middle_name, r.last_name].filter(Boolean).join(' ');
+                    return `<tr>
+                        <td>${r.id}</td>
+                        <td>${escapeHtml(name)}</td>
+                        <td>${escapeHtml((r.address || '').substring(0,40))}${(r.address || '').length > 40 ? '…' : ''}</td>
+                        <td>${escapeHtml(r.contact_number || r.email || '-')}</td>
+                        <td>
+                            <button class="btn btn-sm btn-success" onclick="approveResidentReq(${r.id})"><i class="bi bi-check-lg"></i> Approve</button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectResidentReq(${r.id})"><i class="bi bi-x-lg"></i> Reject</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No pending registrations</td></tr>';
+            }
+        })
+        .catch(() => { if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">Error loading</td></tr>'; });
+}
+
+function approveResidentReq(id) {
+    if (!confirm('Approve this registration?')) return;
+    const fd = new FormData();
+    fd.append('action', 'approve');
+    fd.append('id', id);
+    fetch((window.API_URL || '') + 'resident.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) { showAlert('success', d.message); loadPendingRegistrations(); loadResidents(currentPage); }
+            else showAlert('error', d.message || 'Failed');
+        })
+        .catch(() => showAlert('error', 'Request failed'));
+}
+
+function rejectResidentReq(id) {
+    if (!confirm('Reject this registration?')) return;
+    const fd = new FormData();
+    fd.append('action', 'reject');
+    fd.append('id', id);
+    fetch((window.API_URL || '') + 'resident.php', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => {
+            if (d.success) { showAlert('success', d.message); loadPendingRegistrations(); }
+            else showAlert('error', d.message || 'Failed');
+        })
+        .catch(() => showAlert('error', 'Request failed'));
+}
 
 /**
  * Load all residents
@@ -189,7 +247,22 @@ function editResident(id) {
                 document.getElementById('address').value = resident.address;
                 document.getElementById('contact_number').value = resident.contact_number || '';
                 document.getElementById('household_id').value = resident.household_id || '';
+                document.getElementById('relationship_to_head').value = resident.relationship_to_head || '';
                 document.getElementById('status').value = resident.status;
+                setIfExists('place_of_birth', resident.place_of_birth);
+                setIfExists('length_of_stay_years', resident.length_of_stay_years);
+                setIfExists('date_of_residency', resident.date_of_residency);
+                setIfExists('email', resident.email);
+                setIfExists('monthly_income', resident.monthly_income);
+                setIfExists('employment_type', resident.employment_type);
+                setIfExists('is_pwd', resident.is_pwd, 'checkbox');
+                setIfExists('is_senior', resident.is_senior, 'checkbox');
+                setIfExists('sss_number', resident.sss_number);
+                setIfExists('philhealth_number', resident.philhealth_number);
+                setIfExists('blood_type', resident.blood_type);
+                setIfExists('allergies', resident.allergies);
+                setIfExists('medical_conditions', resident.medical_conditions);
+                setIfExists('disability', resident.disability);
                 document.getElementById('residentModalTitle').textContent = 'Edit Resident';
                 
                 const modal = new bootstrap.Modal(document.getElementById('residentModal'));
@@ -296,11 +369,18 @@ function deleteResident(id) {
 /**
  * Reset form
  */
+function setIfExists(id, val, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (type === 'checkbox') el.checked = !!val && val != '0';
+    else el.value = val != null && val !== '' ? val : '';
+}
+
 function resetForm() {
     document.getElementById('residentForm').reset();
     document.getElementById('residentId').value = '';
-    document.getElementById('citizenship').value = 'Filipino';
-    document.getElementById('status').value = 'active';
+    const cit = document.getElementById('citizenship'); if (cit) cit.value = 'Filipino';
+    const st = document.getElementById('status'); if (st) st.value = 'active';
     document.getElementById('residentModalTitle').textContent = 'Add New Resident';
 }
 
