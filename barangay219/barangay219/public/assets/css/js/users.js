@@ -5,13 +5,19 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     loadUsers();
-    
-    // Form submission
     document.getElementById('userForm').addEventListener('submit', function(e) {
         e.preventDefault();
         saveUser();
     });
+    var roleEl = document.getElementById('role');
+    if (roleEl) roleEl.addEventListener('change', toggleCanApproveRow);
 });
+
+function toggleCanApproveRow() {
+    var role = (document.getElementById('role') || {}).value;
+    var row = document.getElementById('canApproveRow');
+    if (row) row.style.display = role === 'secretary' ? 'block' : 'none';
+}
 
 /**
  * Load all users
@@ -91,6 +97,9 @@ function editUser(id) {
                 document.getElementById('resident_id').value = user.resident_id || '';
                 document.getElementById('status').value = user.status;
                 document.getElementById('password').required = false;
+                var cap = document.getElementById('can_approve_registration');
+                if (cap) cap.checked = !!(user.can_approve_registration && user.can_approve_registration != '0');
+                toggleCanApproveRow();
                 document.getElementById('userModalTitle').textContent = 'Edit User';
                 
                 const modal = new bootstrap.Modal(document.getElementById('userModal'));
