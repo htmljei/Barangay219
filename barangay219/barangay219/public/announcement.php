@@ -1,6 +1,6 @@
 <?php
 define('ACCESS_ALLOWED', true);
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/auth-check.php';
 
 requireLogin();
 requireAnyRole([ROLE_BARANGAY_CAPTAIN, ROLE_SECRETARY, ROLE_KAGAWA, ROLE_SK_CHAIRMAN]);
