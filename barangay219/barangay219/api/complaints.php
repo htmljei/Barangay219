@@ -63,10 +63,10 @@ function updateComplaint() {
     if (!$id) { sendResponse(false, 'ID required', null, 400); return; }
     $updates = [];
     $params = [];
-    foreach (['complaint_title', 'complainant_name', 'respondent_name', 'complaint_type', 'narrative', 'status', 'resolution_date'] as $field) {
+    foreach (['complaint_title', 'complainant_name', 'respondent_name', 'complaint_type', 'narrative', 'filing_date', 'status', 'resolution_date'] as $field) {
         if (isset($_POST[$field])) {
             $updates[] = "$field = ?";
-            $params[] = $field === 'filing_date' || $field === 'resolution_date' ? $_POST[$field] : sanitizeInput($_POST[$field]);
+            $params[] = in_array($field, ['filing_date', 'resolution_date']) ? $_POST[$field] : sanitizeInput($_POST[$field]);
         }
     }
     if (empty($updates)) { sendResponse(false, 'Nothing to update', null, 400); return; }
